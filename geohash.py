@@ -67,16 +67,14 @@ while curpow <= len(hexnum[0]):
     curpow += 1
 
 if latitude >= 0:
-    decnum[0] += latitude
+    latitude += decnum[0]
 else:
-    decnum[0] -= latitude
-    decnum[0] *= -1
+    latitude += decnum[0] * -1
 
 if longitude >= 0:
-    decnum[1] += longitude
+    longitude += decnum[1]
 else:
-    decnum[1] -= longitude
-    decnum[1] *= -1
+    longitude += decnum[1] * -1
 
 url = ""
 
@@ -90,7 +88,7 @@ elif map == "bing":
     url = "http://www.bing.com/maps/?q={0}+{1}&lvl=11"
 
 if map != "":
-    print url.format(decnum[0], decnum[1], "Geohash+for+" + str(datetime.date.today()))
+    print url.format(latitude, longitude, "Geohash+for+" + str(datetime.date.today()))
 else:
-    print "latitude: " + str(decnum[0])
-    print "longitude: " + str(decnum[1])
+    print "latitude: " + str(latitude)
+    print "longitude: " + str(longitude)
