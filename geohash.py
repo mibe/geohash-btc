@@ -19,9 +19,9 @@ import urllib
 import argparse
 
 parser = argparse.ArgumentParser(description="Calculate a geohash location based on the opening price for BTC trades.")
-parser.add_argument('lat', help="Latitude (integer part)", type=int)
-parser.add_argument('lon', help="Longitude (integer part)", type=int)
-parser.add_argument('-s', '--symbol', help="Symbol of the market (default: mtgoxUSD)", default="mtgoxUSD")
+parser.add_argument('lat', help="latitude (integer part)", type=int)
+parser.add_argument('lon', help="longitude (integer part)", type=int)
+parser.add_argument('-s', '--symbol', help="symbol of the market (default: mtgoxUSD)", default="mtgoxUSD")
 
 args = parser.parse_args()
 
