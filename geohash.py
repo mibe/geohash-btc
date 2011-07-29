@@ -22,7 +22,7 @@ parser = argparse.ArgumentParser(description="Calculate a geohash location based
 parser.add_argument('lat', help="latitude (integer part)", type=int)
 parser.add_argument('lon', help="longitude (integer part)", type=int)
 parser.add_argument('-s', '--symbol', help="symbol of the market (default: mtgoxUSD)", default="mtgoxUSD")
-parser.add_argument('-m', '--map', help="print URL to a mapping service instead of displaying the raw latitude & longitude.", default="")
+parser.add_argument('-m', '--map', help="print URL to a mapping service instead of displaying the raw latitude & longitude.", default="", choices=["google", "osm", "yahoo", "bing"])
 
 args = parser.parse_args()
 
