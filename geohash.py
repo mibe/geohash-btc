@@ -1,6 +1,8 @@
 #!/usr/bin/python
 
-# Copyright 2011 Mark Holmquist
+# Copyright (C) 2011 Mark Holmquist
+# Copyright (C) 2011 Michael Bemmerl
+
 # This script is free software, licensed under the GPLv3, of which you should have received a copy with this software.
 # If you didn't, I apologize, but you'll be able to find it at /usr/share/common-licences/GPL-3 or http://www.gnu.org/licenses/gpl-3.0.txt
 
@@ -14,9 +16,16 @@ import datetime
 import hashlib
 import json
 import urllib
+import argparse
 
-latitude = 33
-longitude = -116
+parser = argparse.ArgumentParser(description="Calculate a geohash location based on the opening price for BTC/USD trades at Mt. Gox.")
+parser.add_argument('lat', help="Latitude (integer part)", type=int)
+parser.add_argument('lon', help="Longitude (integer part)", type=int)
+
+args = parser.parse_args()
+
+latitude = args.lat
+longitude = args.lon
 
 btcinfo = urllib.urlopen("http://bitcoincharts.com/t/markets.json")
 jsoninfo = btcinfo.read()
