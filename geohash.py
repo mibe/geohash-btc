@@ -22,20 +22,22 @@ parser = argparse.ArgumentParser(description="Calculate a geohash location based
 parser.add_argument('lat', help="latitude (integer part)", type=int)
 parser.add_argument('lon', help="longitude (integer part)", type=int)
 parser.add_argument('-s', '--symbol', help="symbol of the market (default: mtgoxUSD)", default="mtgoxUSD")
+parser.add_argument('-m', '--map', help="print URL to a mapping service instead of displaying the raw latitude & longitude.", default="")
 
 args = parser.parse_args()
 
 latitude = args.lat
 longitude = args.lon
 symbol = args.symbol.lower()
+map = args.map.lower()
 jsoninfo = ""
 
 try:
-        btcinfo = urllib.urlopen("http://bitcoincharts.com/t/markets.json")
-        jsoninfo = btcinfo.read()
+    btcinfo = urllib.urlopen("http://bitcoincharts.com/t/markets.json")
+    jsoninfo = btcinfo.read()
 except IOError as (errno, strerror):
-        print "Could not retrieve data from bitcoincharts: " + str(strerror)
-	raise SystemExit
+    print "Could not retrieve data from bitcoincharts: " + str(strerror)
+    raise SystemExit
 
 dictinfo = json.loads(jsoninfo)
 
@@ -76,4 +78,19 @@ else:
     decnum[1] -= longitude
     decnum[1] *= -1
 
-print "http://maps.google.com/maps?q=" + str(decnum[0]) + "," + str(decnum[1]) + "(Geohash+for+" + str(datetime.date.today()) + ")&iwloc=A"
+url = ""
+
+if map == "google":
+    url = "http://maps.google.com/maps?q={0},{1}({2})&iwloc=A"
+elif map == "osm":
+    url = "http://osm.org/?mlat={0}&mlon={1}&zoom=12"
+elif map == "yahoo":
+    url = "http://maps.yahoo.com/maps_result?ard=1&mag=9&lat={0}&lon={1}"
+elif map == "bing":
+    url = "http://www.bing.com/maps/?q={0}+{1}&lvl=11"
+
+if map != "":
+    print url.format(decnum[0], decnum[1], "Geohash+for+" + str(datetime.date.today()))
+else:
+    print "latitude: " + str(decnum[0])
+    print "longitude: " + str(decnum[1])
