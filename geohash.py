@@ -19,10 +19,11 @@ import urllib
 import argparse
 
 parser = argparse.ArgumentParser(description="Calculate a geohash location based on the opening price for BTC trades.")
-parser.add_argument('lat', help="latitude (integer part)", type=int)
-parser.add_argument('lon', help="longitude (integer part)", type=int)
+parser.add_argument('lat', help="latitude (integer part)", type=int, default=0)
+parser.add_argument('lon', help="longitude (integer part)", type=int, default=0)
 parser.add_argument('-s', '--symbol', help="symbol of the market (default: mtgoxUSD)", default="mtgoxUSD")
 parser.add_argument('-m', '--map', help="print URL to a mapping service instead of displaying the raw latitude & longitude.", default="", choices=["google", "osm", "yahoo", "bing"])
+parser.add_argument('--list-symbols', help="list all available market symbols.", action="store_true")
 
 args = parser.parse_args()
 
@@ -40,6 +41,11 @@ except IOError as (errno, strerror):
     raise SystemExit
 
 dictinfo = json.loads(jsoninfo)
+
+if args.list_symbols:
+    for sym in dictinfo:
+        print sym["symbol"]
+    raise SystemExit
 
 todayopen = -1
 for sym in dictinfo:
