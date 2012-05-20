@@ -1,12 +1,12 @@
 #!/usr/bin/python
 
 # Copyright (C) 2011 Mark Holmquist
-# Copyright (C) 2011 Michael Bemmerl
+# Copyright (C) 2011, 2012 Michael Bemmerl
 
 # This script is free software, licensed under the GPLv3, of which you should have received a copy with this software.
 # If you didn't, I apologize, but you'll be able to find it at /usr/share/common-licences/GPL-3 or http://www.gnu.org/licenses/gpl-3.0.txt
 
-# This script will calculate a geohash location for you based on the opening price at a market for BTC trades.
+# This script will calculate a geohash location for you based on the first price at Mt. Gox for BTC/USD trades after UTC midnight.
 # Usually, people use the DJIA for this algorithm, but I didn't think that was nerdy enough :)
 # It will also automagically give you a link to a google map to the location.
 # If you'd like any help with it, don't hesitate to open up an issue at github.
@@ -14,9 +14,10 @@
 
 import datetime
 import hashlib
-import json
 import urllib
 import argparse
+import time
+import csv
 
 parser = argparse.ArgumentParser(description="Calculate a geohash location based on the opening price for BTC trades.")
 parser.add_argument('lat', help="latitude (integer part)", type=int)
@@ -25,34 +26,32 @@ parser.add_argument('-s', '--symbol', help="symbol of the market (default: mtgox
 parser.add_argument('-m', '--map', help="print URL to a mapping service instead of displaying the raw latitude & longitude.", default="", choices=["google", "osm", "yahoo", "bing"])
 
 args = parser.parse_args()
-
 latitude = args.lat
 longitude = args.lon
 symbol = args.symbol.lower()
 map = args.map.lower()
-jsoninfo = ""
+
+# Calculate unix timestamp of last midnight (UTC)
+utc_unix = time.time()
+midnight = utc_unix - utc_unix % 86400
 
 try:
-    btcinfo = urllib.urlopen("http://bitcoincharts.com/t/markets.json")
-    jsoninfo = btcinfo.read()
+    csvinfo = urllib.urlopen("http://bitcoincharts.com/t/trades.csv?symbol={0}&start={1}".format(symbol, int(midnight)))
 except IOError as (errno, strerror):
     print "Could not retrieve data from bitcoincharts: " + str(strerror)
     raise SystemExit
 
-dictinfo = json.loads(jsoninfo)
+reader = csv.reader(csvinfo, delimiter=',')
 
-todayopen = -1
-for sym in dictinfo:
-    if sym["symbol"].lower() == symbol:
-        todayopen = sym["open"]
-        break
-    else:
-        continue
+# Price is in the second column
+firstprice = -1
 
-if todayopen < 0:
+try:
+    firstprice = reader.next()[1]
+except IndexError:
     raise ValueError("Symbol \"{0}\" not found. Try another one.".format(symbol))
 
-thestring = str(datetime.date.today()) + "-" + str(todayopen)
+thestring = str(datetime.date.today()) + "-" + str(firstprice)
 
 thehash = hashlib.md5(thestring).hexdigest()
 
