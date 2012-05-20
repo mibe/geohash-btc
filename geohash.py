@@ -36,6 +36,10 @@ map = args.map.lower()
 utc_unix = time.time()
 midnight = utc_unix - utc_unix % 86400
 
+# 30W Time Zone Rule (see http://wiki.xkcd.com/geohashing/30W)
+if latitude > -30:
+    midnight -= 86400
+
 try:
     csvinfo = urllib.urlopen("http://bitcoincharts.com/t/trades.csv?symbol={0}&start={1}".format(symbol, int(midnight)))
 except IOError as (errno, strerror):
