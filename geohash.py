@@ -1,10 +1,12 @@
 #!/usr/bin/python
 
-# Copyright 2011 Mark Holmquist
+# Copyright (C) 2011 Mark Holmquist
+# Copyright (C) 2012 Michael Bemmerl
+
 # This script is free software, licensed under the GPLv3, of which you should have received a copy with this software.
 # If you didn't, I apologize, but you'll be able to find it at /usr/share/common-licences/GPL-3 or http://www.gnu.org/licenses/gpl-3.0.txt
 
-# This script will calculate a geohash location for you based on the opening price at Mt. Gox for BTC/USD trades.
+# This script will calculate a geohash location for you based on the first price at Mt. Gox for BTC/USD trades after UTC midnight.
 # Usually, people use the DJIA for this algorithm, but I didn't think that was nerdy enough :)
 # It will also automagically give you a link to a google map to the location.
 # If you'd like any help with it, don't hesitate to open up an issue at github.
@@ -12,23 +14,22 @@
 
 import datetime
 import hashlib
-import json
 import urllib
+import time
+import csv
 
 latitude = 33
 longitude = -116
-
-btcinfo = urllib.urlopen("http://bitcoincharts.com/t/markets.json")
-jsoninfo = btcinfo.read()
-
-dictinfo = json.loads(jsoninfo)
-
 todayopen = -1
-for sym in dictinfo:
-    if sym["symbol"] == "mtgoxUSD":
-        todayopen = sym["open"]
-    else:
-        continue
+
+utc_unix = time.time()
+midnight = utc_unix - utc_unix % 86400
+csvinfo = urllib.urlopen("http://bitcoincharts.com/t/trades.csv?symbol=mtgoxUSD&start={0}".format(int(midnight)))
+
+reader = csv.reader(csvinfo, delimiter=',')
+
+# Price is in the second column
+todayopen = reader.next()[1]
 
 if todayopen < 0:
     raise ValueError("No data from bitcoincharts, is it down?")
