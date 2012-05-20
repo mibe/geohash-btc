@@ -6,13 +6,13 @@
 # This script is free software, licensed under the GPLv3, of which you should have received a copy with this software.
 # If you didn't, I apologize, but you'll be able to find it at /usr/share/common-licences/GPL-3 or http://www.gnu.org/licenses/gpl-3.0.txt
 
-# This script will calculate a geohash location for you based on the first price at Mt. Gox for BTC/USD trades after UTC midnight.
+# This script will calculate a geohash location for you based on the first price at a market for BTC trades after midnight (UTC).
 # Usually, people use the DJIA for this algorithm, but I didn't think that was nerdy enough :)
 # It will also automagically give you a link to a google map to the location.
 # If you'd like any help with it, don't hesitate to open up an issue at github.
 # Have fun!
 
-import datetime
+from datetime import date
 import hashlib
 import urllib
 import argparse
@@ -26,9 +26,10 @@ parser.add_argument('-s', '--symbol', help="symbol of the market (default: mtgox
 parser.add_argument('-m', '--map', help="print URL to a mapping service instead of displaying the raw latitude & longitude.", default="", choices=["google", "osm", "yahoo", "bing"])
 
 args = parser.parse_args()
+
 latitude = args.lat
 longitude = args.lon
-symbol = args.symbol.lower()
+symbol = args.symbol
 map = args.map.lower()
 
 # Calculate unix timestamp of last midnight (UTC)
@@ -43,15 +44,17 @@ except IOError as (errno, strerror):
 
 reader = csv.reader(csvinfo, delimiter=',')
 
-# Price is in the second column
 firstprice = -1
 
 try:
+    # Price is in the second column
     firstprice = reader.next()[1]
+except StopIteration:
+    raise ValueError("No price data for symbol \"{0}\".".format(symbol))
 except IndexError:
     raise ValueError("Symbol \"{0}\" not found. Try another one.".format(symbol))
 
-thestring = str(datetime.date.today()) + "-" + str(firstprice)
+thestring = str(date.today()) + "-" + str(firstprice)
 
 thehash = hashlib.md5(thestring).hexdigest()
 
@@ -87,7 +90,7 @@ elif map == "bing":
     url = "http://www.bing.com/maps/?q={0}+{1}&lvl=11"
 
 if map != "":
-    print url.format(latitude, longitude, "Geohash+for+" + str(datetime.date.today()))
+    print url.format(latitude, longitude, "Geohash+for+" + str(date.today()))
 else:
     print "latitude: " + str(latitude)
     print "longitude: " + str(longitude)
