@@ -13,17 +13,17 @@
 # Have fun!
 
 from datetime import date
-import hashlib
-import urllib
-import argparse
-import time
-import csv
+import hashlib, urllib, argparse, time, csv
 
-parser = argparse.ArgumentParser(description="Calculate a geohash location based on the opening price for BTC trades.")
-parser.add_argument('lat', help="latitude (integer part)", type=int)
-parser.add_argument('lon', help="longitude (integer part)", type=int)
-parser.add_argument('-s', '--symbol', help="symbol of the market (default: mtgoxUSD)", default="mtgoxUSD")
-parser.add_argument('-m', '--map', help="print URL to a mapping service instead of displaying the raw latitude & longitude.", default="", choices=["google", "osm", "yahoo", "bing"])
+parser = argparse.ArgumentParser(description="Calculate a geohash location based on the midnight price for BTC trades.")
+
+subparsers = parser.add_subparsers(help="sub-commands", dest="parser")
+
+graticule_parser = subparsers.add_parser("graticule", help="calculate the geohash of a graticule")
+graticule_parser.add_argument('lat', help="latitude (integer part)", type=int)
+graticule_parser.add_argument('lon', help="longitude (integer part)", type=int)
+graticule_parser.add_argument('-s', '--symbol', help="symbol of the market (default: mtgoxUSD)", default="mtgoxUSD")
+graticule_parser.add_argument('-m', '--map', help="print URL to a mapping service instead of displaying the raw latitude & longitude.", default="", choices=["google", "osm", "yahoo", "bing"])
 
 args = parser.parse_args()
 
