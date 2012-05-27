@@ -13,7 +13,7 @@
 # Have fun!
 
 from datetime import date
-import hashlib, urllib, argparse, time, csv
+import hashlib, urllib, argparse, time, csv, json
 
 parser = argparse.ArgumentParser(description="Calculate a geohash location based on the midnight price for BTC trades.")
 
@@ -28,6 +28,8 @@ graticule_parser.add_argument('lat', help="latitude (integer part)", type=int)
 graticule_parser.add_argument('lon', help="longitude (integer part)", type=int)
 graticule_parser.add_argument('-s', '--symbol', help="symbol of the market (default: mtgoxUSD)", default="mtgoxUSD")
 graticule_parser.add_argument('-m', '--map', help="print URL to a mapping service instead of displaying the raw latitude & longitude.", default="", choices=["google", "osm", "yahoo", "bing"])
+
+list_symbols_parser = subparsers.add_parser("list-symbols", help="list all available symbols")
 
 def get_midnight(thirtyw_rule):
     """Calculate unix timestamp of last midnight (UTC)"""
@@ -118,6 +120,18 @@ def print_coords(map, latitude, longitude):
         print "latitude: " + str(latitude)
         print "longitude: " + str(longitude)
 
+def list_symbols():
+    try:
+        btcinfo = urllib.urlopen("http://bitcoincharts.com/t/markets.json")
+        jsoninfo = btcinfo.read()
+        jsoninfo = json.loads(jsoninfo)
+
+        for sym in jsoninfo:
+            print sym["symbol"]
+    except IOError as (errno, strerror):
+        print "Could not retrieve data from bitcoincharts: " + str(strerror)
+        raise SystemExit
+
 #
 # End of function definitions
 #
@@ -144,3 +158,5 @@ elif args.parser == "globalhash":
 
     coords = globalhash(decnum)
     print_coords(args.map.lower(), coords[0], coords[1])
+elif args.parser == "list-symbols":
+    list_symbols()
