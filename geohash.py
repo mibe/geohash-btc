@@ -12,7 +12,7 @@
 # If you'd like any help with it, don't hesitate to open up an issue at github.
 # Have fun!
 
-from datetime import date
+from datetime import date, datetime
 import hashlib, urllib, argparse, time, csv, json
 
 parser = argparse.ArgumentParser(description="Calculate a geohash location based on the midnight price for BTC trades.")
@@ -121,16 +121,19 @@ def print_coords(map, latitude, longitude):
         print "longitude: " + str(longitude)
 
 def list_symbols():
+    jsoninfo = ""
+
     try:
         btcinfo = urllib.urlopen("http://bitcoincharts.com/t/markets.json")
         jsoninfo = btcinfo.read()
         jsoninfo = json.loads(jsoninfo)
-
-        for sym in jsoninfo:
-            print sym["symbol"]
     except IOError as (errno, strerror):
         print "Could not retrieve data from bitcoincharts: " + str(strerror)
         raise SystemExit
+
+    print "symbol name".ljust(20) + "last trade"
+    for sym in jsoninfo:
+        print sym["symbol"].ljust(20) + str(datetime.fromtimestamp(int(sym["latest_trade"])))
 
 #
 # End of function definitions
