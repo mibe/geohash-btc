@@ -125,6 +125,9 @@ def print_coords(map, latitude, longitude):
 args = parser.parse_args()
 
 if args.parser == "graticule":
+    if abs(args.lat) > 90 or abs(args.lon) > 180:
+        raise ValueError("Graticule coordinates out of range.")
+
     # 30W Time Zone Rule (see http://wiki.xkcd.com/geohashing/30W)
     midnight = get_midnight(args.lat > -30)
 
