@@ -25,76 +25,100 @@ graticule_parser.add_argument('lon', help="longitude (integer part)", type=int)
 graticule_parser.add_argument('-s', '--symbol', help="symbol of the market (default: mtgoxUSD)", default="mtgoxUSD")
 graticule_parser.add_argument('-m', '--map', help="print URL to a mapping service instead of displaying the raw latitude & longitude.", default="", choices=["google", "osm", "yahoo", "bing"])
 
+def get_midnight(thirtyw_rule):
+    """Calculate unix timestamp of last midnight (UTC)"""
+    utc_unix = time.time()
+    midnight = utc_unix - utc_unix % 86400
+
+    if thirtyw_rule:
+        midnight -= 86400
+
+    return midnight
+
+def get_price(timestamp, symbol):
+    """Returns the first price after the unix date in timestamp"""
+    try:
+        csvinfo = urllib.urlopen("http://bitcoincharts.com/t/trades.csv?symbol={0}&start={1}".format(symbol, int(timestamp)))
+    except IOError as (errno, strerror):
+        print "Could not retrieve data from bitcoincharts: " + str(strerror)
+        raise SystemExit
+
+    reader = csv.reader(csvinfo, delimiter=',')
+
+    firstprice = -1
+
+    try:
+        firstprice = reader.next()[1]			# Price is in the second column
+    except StopIteration:
+        raise ValueError("No price data for symbol \"{0}\".".format(symbol))
+    except IndexError:
+        raise ValueError("Symbol \"{0}\" not found. Try another one.".format(symbol))
+
+    return firstprice
+
+def algorithm(date, price):
+    """Calculate the geohash algorithm and return a tupel with the results for latitude & longitude"""
+    thestring = str(date) + "-" + str(price)
+
+    thehash = hashlib.md5(thestring).hexdigest()
+
+    hexnum = (thehash[0:16], thehash[16:32])
+
+    curpow = 1
+    decnum = [0.0, 0.0]
+
+    while curpow <= len(hexnum[0]):
+        decnum[0] += int(hexnum[0][curpow-1], 16) * (1.0 / (16.0 ** curpow))
+        decnum[1] += int(hexnum[1][curpow-1], 16) * (1.0 / (16.0 ** curpow))
+        curpow += 1
+
+    return decnum
+
+def graticule(decnum, latitude, longitude):
+    """Calculate the geohash coordinates for a graticule."""
+    if latitude >= 0:
+        latitude += decnum[0]
+    else:
+        latitude += decnum[0] * -1
+
+    if longitude >= 0:
+        longitude += decnum[1]
+    else:
+        longitude += decnum[1] * -1
+
+    return (latitude, longitude)
+
+def print_coords(map, latitude, longitude):
+    """Print the coordinates on the console."""
+    url = ""
+
+    if map == "google":
+        url = "http://maps.google.com/maps?q={0},{1}({2})&iwloc=A"
+    elif map == "osm":
+        url = "http://osm.org/?mlat={0}&mlon={1}&zoom=12"
+    elif map == "yahoo":
+        url = "http://maps.yahoo.com/maps_result?ard=1&mag=9&lat={0}&lon={1}"
+    elif map == "bing":
+        url = "http://www.bing.com/maps/?q={0}+{1}&lvl=11"
+
+    if map != "":
+        print url.format(latitude, longitude, "Geohash+for+" + str(date.today()))
+    else:
+        print "latitude: " + str(latitude)
+        print "longitude: " + str(longitude)
+
+#
+# End of function definitions
+#
+
 args = parser.parse_args()
 
-latitude = args.lat
-longitude = args.lon
-symbol = args.symbol
-map = args.map.lower()
+if args.parser == "graticule":
+    # 30W Time Zone Rule (see http://wiki.xkcd.com/geohashing/30W)
+    midnight = get_midnight(args.lat > -30)
 
-# Calculate unix timestamp of last midnight (UTC)
-utc_unix = time.time()
-midnight = utc_unix - utc_unix % 86400
+    price = get_price(midnight, args.symbol)
+    decnum = algorithm(date.today(), price)
 
-# 30W Time Zone Rule (see http://wiki.xkcd.com/geohashing/30W)
-if latitude > -30:
-    midnight -= 86400
-
-try:
-    csvinfo = urllib.urlopen("http://bitcoincharts.com/t/trades.csv?symbol={0}&start={1}".format(symbol, int(midnight)))
-except IOError as (errno, strerror):
-    print "Could not retrieve data from bitcoincharts: " + str(strerror)
-    raise SystemExit
-
-reader = csv.reader(csvinfo, delimiter=',')
-
-firstprice = -1
-
-try:
-    # Price is in the second column
-    firstprice = reader.next()[1]
-except StopIteration:
-    raise ValueError("No price data for symbol \"{0}\".".format(symbol))
-except IndexError:
-    raise ValueError("Symbol \"{0}\" not found. Try another one.".format(symbol))
-
-thestring = str(date.today()) + "-" + str(firstprice)
-
-thehash = hashlib.md5(thestring).hexdigest()
-
-hexnum = (thehash[0:16], thehash[16:32])
-
-curpow = 1
-decnum = [0.0, 0.0]
-
-while curpow <= len(hexnum[0]):
-    decnum[0] += int(hexnum[0][curpow-1], 16) * (1.0 / (16.0 ** curpow))
-    decnum[1] += int(hexnum[1][curpow-1], 16) * (1.0 / (16.0 ** curpow))
-    curpow += 1
-
-if latitude >= 0:
-    latitude += decnum[0]
-else:
-    latitude += decnum[0] * -1
-
-if longitude >= 0:
-    longitude += decnum[1]
-else:
-    longitude += decnum[1] * -1
-
-url = ""
-
-if map == "google":
-    url = "http://maps.google.com/maps?q={0},{1}({2})&iwloc=A"
-elif map == "osm":
-    url = "http://osm.org/?mlat={0}&mlon={1}&zoom=12"
-elif map == "yahoo":
-    url = "http://maps.yahoo.com/maps_result?ard=1&mag=9&lat={0}&lon={1}"
-elif map == "bing":
-    url = "http://www.bing.com/maps/?q={0}+{1}&lvl=11"
-
-if map != "":
-    print url.format(latitude, longitude, "Geohash+for+" + str(date.today()))
-else:
-    print "latitude: " + str(latitude)
-    print "longitude: " + str(longitude)
+    coords = graticule(decnum, args.lat, args.lon)
+    print_coords(args.map.lower(), coords[0], coords[1])
