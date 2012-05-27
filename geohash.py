@@ -19,6 +19,10 @@ parser = argparse.ArgumentParser(description="Calculate a geohash location based
 
 subparsers = parser.add_subparsers(help="sub-commands", dest="parser")
 
+globalhash_parser = subparsers.add_parser("globalhash", help="calculate the globalhash")
+globalhash_parser.add_argument('-s', '--symbol', help="symbol of the market (default: mtgoxUSD)", default="mtgoxUSD")
+globalhash_parser.add_argument('-m', '--map', help="print URL to a mapping service instead of displaying the raw latitude & longitude.", default="", choices=["google", "osm", "yahoo", "bing"])
+
 graticule_parser = subparsers.add_parser("graticule", help="calculate the geohash of a graticule")
 graticule_parser.add_argument('lat', help="latitude (integer part)", type=int)
 graticule_parser.add_argument('lon', help="longitude (integer part)", type=int)
@@ -88,6 +92,13 @@ def graticule(decnum, latitude, longitude):
 
     return (latitude, longitude)
 
+def globalhash(decnum):
+    """Calculate the globalhash coordinates."""
+    latitude = decnum[0] * 180 - 90
+    longitude = decnum[1] * 360 - 180
+
+    return (latitude, longitude)
+
 def print_coords(map, latitude, longitude):
     """Print the coordinates on the console."""
     url = ""
@@ -121,4 +132,12 @@ if args.parser == "graticule":
     decnum = algorithm(date.today(), price)
 
     coords = graticule(decnum, args.lat, args.lon)
+    print_coords(args.map.lower(), coords[0], coords[1])
+elif args.parser == "globalhash":
+    midnight = get_midnight(True)			# Globalhash is always with 30W rule.
+
+    price = get_price(midnight, args.symbol)
+    decnum = algorithm(date.today(), price)
+
+    coords = globalhash(decnum)
     print_coords(args.map.lower(), coords[0], coords[1])
