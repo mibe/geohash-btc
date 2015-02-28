@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 # Copyright (C) 2011 Mark Holmquist
-# Copyright (C) 2011, 2012 Michael Bemmerl
+# Copyright (C) 2011, 2012, 2015 Michael Bemmerl
 
 # This script is free software, licensed under the GPLv3, of which you should have received a copy with this software.
 # If you didn't, I apologize, but you'll be able to find it at /usr/share/common-licences/GPL-3 or http://www.gnu.org/licenses/gpl-3.0.txt
@@ -20,13 +20,13 @@ parser = argparse.ArgumentParser(description="Calculate a geohash location based
 subparsers = parser.add_subparsers(help="sub-commands", dest="parser")
 
 globalhash_parser = subparsers.add_parser("globalhash", help="calculate the globalhash")
-globalhash_parser.add_argument('-s', '--symbol', help="symbol of the market (default: mtgoxUSD)", default="mtgoxUSD")
+globalhash_parser.add_argument('-s', '--symbol', help="symbol of the market (default: bitfinexUSD)", default="bitfinexUSD")
 globalhash_parser.add_argument('-m', '--map', help="print URL to a mapping service instead of displaying the raw latitude & longitude.", default="", choices=["google", "osm", "yahoo", "bing"])
 
 graticule_parser = subparsers.add_parser("graticule", help="calculate the geohash of a graticule")
 graticule_parser.add_argument('lat', help="latitude (integer part)", type=int)
 graticule_parser.add_argument('lon', help="longitude (integer part)", type=int)
-graticule_parser.add_argument('-s', '--symbol', help="symbol of the market (default: mtgoxUSD)", default="mtgoxUSD")
+graticule_parser.add_argument('-s', '--symbol', help="symbol of the market (default: bitfinexUSD)", default="bitfinexUSD")
 graticule_parser.add_argument('-m', '--map', help="print URL to a mapping service instead of displaying the raw latitude & longitude.", default="", choices=["google", "osm", "yahoo", "bing"])
 
 list_symbols_parser = subparsers.add_parser("list-symbols", help="list all available symbols")
@@ -44,7 +44,7 @@ def get_midnight(thirtyw_rule):
 def get_price(timestamp, symbol):
     """Returns the first price after the unix date in timestamp"""
     try:
-        csvinfo = urllib.urlopen("http://bitcoincharts.com/t/trades.csv?symbol={0}&start={1}".format(symbol, int(timestamp)))
+        csvinfo = urllib.urlopen("http://api.bitcoincharts.com/v1/trades.csv?symbol={0}&start={1}".format(symbol, int(timestamp)))
     except IOError as (errno, strerror):
         print "Could not retrieve data from bitcoincharts: " + str(strerror)
         raise SystemExit
@@ -124,7 +124,7 @@ def list_symbols():
     jsoninfo = ""
 
     try:
-        btcinfo = urllib.urlopen("http://bitcoincharts.com/t/markets.json")
+        btcinfo = urllib.urlopen("http://api.bitcoincharts.com/v1/markets.json")
         jsoninfo = btcinfo.read()
         jsoninfo = json.loads(jsoninfo)
     except IOError as (errno, strerror):
