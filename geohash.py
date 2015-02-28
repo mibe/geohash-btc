@@ -44,7 +44,7 @@ def get_midnight(thirtyw_rule):
 def get_price(timestamp, symbol):
     """Returns the first price after the unix date in timestamp"""
     try:
-        csvinfo = urllib.urlopen("http://api.bitcoincharts.com/v1/trades.csv?symbol={0}&start={1}".format(symbol, int(timestamp)))
+        csvinfo = urllib.urlopen("https://api.bitcoincharts.com/v1/trades.csv?symbol={0}&start={1}".format(symbol, int(timestamp)))
     except IOError as (errno, strerror):
         print "Could not retrieve data from bitcoincharts: " + str(strerror)
         raise SystemExit
@@ -106,7 +106,7 @@ def print_coords(map, latitude, longitude):
     url = ""
 
     if map == "google":
-        url = "http://maps.google.com/maps?q={0},{1}({2})&iwloc=A"
+        url = "https://maps.google.com/maps?q={0},{1}({2})&iwloc=A"
     elif map == "osm":
         url = "http://osm.org/?mlat={0}&mlon={1}#map=14/{0}/{1}"
     elif map == "yahoo":
@@ -127,7 +127,7 @@ def list_symbols():
     jsoninfo = ""
 
     try:
-        btcinfo = urllib.urlopen("http://api.bitcoincharts.com/v1/markets.json")
+        btcinfo = urllib.urlopen("https://api.bitcoincharts.com/v1/markets.json")
         jsoninfo = btcinfo.read()
         jsoninfo = json.loads(jsoninfo)
     except IOError as (errno, strerror):
