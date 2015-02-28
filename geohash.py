@@ -108,14 +108,17 @@ def print_coords(map, latitude, longitude):
     if map == "google":
         url = "http://maps.google.com/maps?q={0},{1}({2})&iwloc=A"
     elif map == "osm":
-        url = "http://osm.org/?mlat={0}&mlon={1}&zoom=12"
+        url = "http://osm.org/?mlat={0}&mlon={1}#map=14/{0}/{1}"
     elif map == "yahoo":
-        url = "http://maps.yahoo.com/maps_result?ard=1&mag=9&lat={0}&lon={1}"
+        url = "https://maps.yahoo.com/map/?lat={0}&lon={1}&bb={2},{3},{4},{5}"
     elif map == "bing":
-        url = "http://www.bing.com/maps/?q={0}+{1}&lvl=11"
+        url = "https://www.bing.com/maps/?v=2&cp={0}~{1}&lvl=14&dir=0&sp=point.{0}_{1}_{2}"
 
     if map != "":
-        print url.format(latitude, longitude, "Geohash+for+" + str(date.today()))
+        if map == "yahoo":
+            print url.format(latitude, longitude, latitude + 0.01, longitude + 0.01, latitude - 0.01, longitude - 0.01)
+        else:
+            print url.format(latitude, longitude, "Geohash+for+" + str(date.today()))
     else:
         print "latitude: " + str(latitude)
         print "longitude: " + str(longitude)
