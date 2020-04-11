@@ -20,13 +20,13 @@ parser = argparse.ArgumentParser(description="Calculate a geohash location based
 subparsers = parser.add_subparsers(help="sub-commands", dest="parser")
 
 globalhash_parser = subparsers.add_parser("globalhash", help="calculate the globalhash")
-globalhash_parser.add_argument('-s', '--symbol', help="symbol of the market (default: coinbaseUSD)", default="coinbaseUSD")
+globalhash_parser.add_argument('-s', '--symbol', help="symbol of the market (default: krakenUSD)", default="krakenUSD")
 globalhash_parser.add_argument('-m', '--map', help="print URL to a mapping service instead of displaying the raw latitude & longitude.", default="", choices=["google", "osm", "yahoo", "bing"])
 
 graticule_parser = subparsers.add_parser("graticule", help="calculate the geohash of a graticule")
 graticule_parser.add_argument('lat', help="latitude (integer part)", type=int)
 graticule_parser.add_argument('lon', help="longitude (integer part)", type=int)
-graticule_parser.add_argument('-s', '--symbol', help="symbol of the market (default: coinbaseUSD)", default="coinbaseUSD")
+graticule_parser.add_argument('-s', '--symbol', help="symbol of the market (default: krakenUSD)", default="krakenUSD")
 graticule_parser.add_argument('-m', '--map', help="print URL to a mapping service instead of displaying the raw latitude & longitude.", default="", choices=["google", "osm", "yahoo", "bing"])
 
 list_symbols_parser = subparsers.add_parser("list-symbols", help="list all available symbols")
