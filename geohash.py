@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 # Copyright (C) 2011 Mark Holmquist
-# Copyright (C) 2011, 2012, 2015, 2016 Michael Bemmerl
+# Copyright (C) 2011, 2012, 2015, 2016, 2020 Michael Bemmerl
 
 # This script is free software, licensed under the GPLv3, of which you should have received a copy with this software.
 # If you didn't, I apologize, but you'll be able to find it at /usr/share/common-licences/GPL-3 or http://www.gnu.org/licenses/gpl-3.0.txt
@@ -13,7 +13,7 @@
 # Have fun!
 
 from datetime import date, datetime
-import hashlib, urllib, argparse, time, csv, json
+import hashlib, urllib.request, urllib.parse, urllib.error, argparse, time, csv, json
 
 parser = argparse.ArgumentParser(description="Calculate a geohash location based on the midnight price for BTC trades.")
 
@@ -44,17 +44,19 @@ def get_midnight(thirtyw_rule):
 def get_price(timestamp, symbol):
     """Returns the first price after the unix date in timestamp"""
     try:
-        csvinfo = urllib.urlopen("https://api.bitcoincharts.com/v1/trades.csv?symbol={0}&start={1}".format(symbol, int(timestamp)))
-    except IOError as (errno, strerror):
-        print "Could not retrieve data from bitcoincharts: " + str(strerror)
+        csvinfo = urllib.request.urlopen("https://api.bitcoincharts.com/v1/trades.csv?symbol={0}&start={1}".format(symbol, int(timestamp)))
+    except IOError as e:
+        (errno, strerror) = e.args
+        print("Could not retrieve data from bitcoincharts: " + str(strerror))
         raise SystemExit
 
-    reader = csv.reader(csvinfo, delimiter=',')
+    firstline = csvinfo.read().decode().splitlines()[0]
+    reader = csv.reader([firstline], delimiter=',')
 
     firstprice = -1
 
     try:
-        firstprice = reader.next()[1]			# Price is in the second column
+        firstprice = next(reader)[1]			# Price is in the second column
     except StopIteration:
         raise ValueError("No price data for symbol \"{0}\".".format(symbol))
     except IndexError:
@@ -66,7 +68,7 @@ def algorithm(date, price):
     """Calculate the geohash algorithm and return a tupel with the results for latitude & longitude"""
     thestring = str(date) + "-" + str(price)
 
-    thehash = hashlib.md5(thestring).hexdigest()
+    thehash = hashlib.md5(thestring.encode('utf-8')).hexdigest()
 
     hexnum = (thehash[0:16], thehash[16:32])
 
@@ -116,27 +118,28 @@ def print_coords(map, latitude, longitude):
 
     if map != "":
         if map == "yahoo":
-            print url.format(latitude, longitude, latitude + 0.01, longitude + 0.01, latitude - 0.01, longitude - 0.01)
+            print(url.format(latitude, longitude, latitude + 0.01, longitude + 0.01, latitude - 0.01, longitude - 0.01))
         else:
-            print url.format(latitude, longitude, "Geohash+for+" + str(date.today()))
+            print(url.format(latitude, longitude, "Geohash+for+" + str(date.today())))
     else:
-        print "latitude: " + str(latitude)
-        print "longitude: " + str(longitude)
+        print("latitude: " + str(latitude))
+        print("longitude: " + str(longitude))
 
 def list_symbols():
     jsoninfo = ""
 
     try:
-        btcinfo = urllib.urlopen("https://api.bitcoincharts.com/v1/markets.json")
+        btcinfo = urllib.request.urlopen("https://api.bitcoincharts.com/v1/markets.json")
         jsoninfo = btcinfo.read()
         jsoninfo = json.loads(jsoninfo)
-    except IOError as (errno, strerror):
-        print "Could not retrieve data from bitcoincharts: " + str(strerror)
+    except IOError as e:
+        (errno, strerror) = e.args
+        print("Could not retrieve data from bitcoincharts: " + str(strerror))
         raise SystemExit
 
-    print "symbol name".ljust(20) + "last trade"
+    print("symbol name".ljust(20) + "last trade")
     for sym in jsoninfo:
-        print sym["symbol"].ljust(20) + str(datetime.fromtimestamp(int(sym["latest_trade"])))
+        print(sym["symbol"].ljust(20) + str(datetime.fromtimestamp(int(sym["latest_trade"]))))
 
 #
 # End of function definitions
